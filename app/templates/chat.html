@@ -75,7 +75,14 @@
         .animated-button:active {
             transform: scale(0.95);
         }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
 
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -137,6 +144,13 @@
                                class="w-full p-3 pr-24 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-0 bg-gray-900 text-white placeholder-gray-400"
                                placeholder="Écrivez votre message..." aria-label="Message utilisateur">
                         <div class="absolute right-2 top-1.5 flex space-x-2">
+                            <!-- Ajouter ce bouton -->
+<button type="button" id="cancelInput" 
+        class="animated-button bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 hidden"
+        aria-label="Effacer le texte">
+    <i class="fas fa-times"></i>
+</button>
+
                             <button type="submit" id="sendButton" 
                                     class="animated-button bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700" 
                                     aria-label="Envoyer le message">
@@ -149,6 +163,7 @@
                             </button>
                         </div>
                     </div>
+                    <div id="micStatus" class="hidden text-red-400 text-sm mt-1">Enregistrement...</div>
 
                     <!-- Options avancées -->
                     <div class="grid grid-cols-2 gap-3">
@@ -196,26 +211,6 @@
                             Soumettre
                         </button>
                     </div>
-
-                    <!-- Formulaire pour ajouter une réponse -->
-                    <div id="responseForm" class="hidden p-4 bg-gray-50 border-t">
-                        <p id="responsePrompt" class="text-gray-600 mb-2">Aidez-nous à améliorer ! Fournissez une réponse correcte :</p>
-                        <textarea id="newResponse" placeholder="Entrez la réponse correcte..." 
-                                  class="w-full p-2 border rounded-lg focus:ring-0 focus:border-indigo-300" aria-label="Nouvelle réponse"></textarea>
-                        <input id="newLink" type="text" placeholder="Lien (optionnel)..." 
-                               class="w-full p-2 border rounded-lg mt-2 focus:ring-0 focus:border-indigo-300" aria-label="Lien optionnel">
-                        <select id="newCategory" class="w-full p-2 border rounded-lg mt-2 focus:ring-0 focus:border-indigo-300" aria-label="Catégorie">
-                            <option value="Général">Général</option>
-                            <option value="Technique">Technique</option>
-                            <option value="Autre">Autre</option>
-                        </select>
-                        <button id="submitResponse" 
-                                class="bg-indigo-600 text-white p-2 rounded-lg mt-2 hover:bg-indigo-700" 
-                                aria-label="Soumettre la réponse">
-                            Soumettre
-                        </button>
-                    </div>
-
                     <!-- Pied de page -->
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-3">
@@ -264,7 +259,21 @@
                 newResponse: "Entrez la réponse correcte...",
                 newLink: "Lien (optionnel)...",
                 submit: "Soumettre",
-                noMatch: "Désolé, je n'ai pas compris."
+                noMatch: "Désolé, je n'ai pas compris.",
+                error: "Erreur",
+                speechNotSupported: "La reconnaissance vocale n'est pas supportée par ce navigateur.",
+                speechError: "Échec de la reconnaissance vocale.",
+                recording: "Enregistrement...",
+                uploading: "Téléversement",
+                networkError: "Erreur réseau",
+                fileUploaded: "Fichier uploadé",
+                responseAdded: "Merci ! Votre réponse a été ajoutée.",
+                noResponse: "Veuillez entrer une réponse.",
+                historyCleared: "Historique vidé.",
+                noConversations: "Aucune conversation à exporter.",
+                exportSuccess: "PDF exporté avec succès.",
+                exporting: "Exportation...",
+                textExtracted: 'Texte extrait prêt à envoyer'
             },
             en: {
                 title: "ISET Chatbot",
@@ -280,7 +289,21 @@
                 newResponse: "Enter the correct answer...",
                 newLink: "Link (optional)...",
                 submit: "Submit",
-                noMatch: "Sorry, I didn't understand."
+                noMatch: "Sorry, I didn't understand.",
+                error: "Error",
+                speechNotSupported: "Speech recognition is not supported by this browser.",
+                speechError: "Speech recognition failed.",
+                recording: "Recording...",
+                uploading: "Uploading",
+                networkError: "Network error",
+                fileUploaded: "File uploaded",
+                responseAdded: "Thank you! Your response has been added.",
+                noResponse: "Please enter a response.",
+                historyCleared: "History cleared.",
+                noConversations: "No conversations to export.",
+                exportSuccess: "PDF exported successfully.",
+                exporting: "Exporting...",
+                textExtracted: 'Extracted text ready to send'
             },
             ar: {
                 title: "روبوت الدردشة ISET",
@@ -296,7 +319,21 @@
                 newResponse: "أدخل الإجابة الصحيحة...",
                 newLink: "رابط (اختياري)...",
                 submit: "إرسال",
-                noMatch: "عذرًا، لم أفهم."
+                noMatch: "عذرًا، لم أفهم.",
+                error: "خطأ",
+                speechNotSupported: "التعرف على الكلام غير مدعوم في هذا المتصفح.",
+                speechError: "فشل التعرف على الكلام.",
+                recording: "جارٍ التسجيل...",
+                uploading: "جارٍ الرفع",
+                networkError: "خطأ في الشبكة",
+                fileUploaded: "تم رفع الملف",
+                responseAdded: "شكرًا! تمت إضافة ردك.",
+                noResponse: "يرجى إدخال رد.",
+                historyCleared: "تم مسح السجل.",
+                noConversations: "لا توجد محادثات للتصدير.",
+                exportSuccess: "تم تصدير PDF بنجاح.",
+                exporting: "جارٍ التصدير...",
+                textExtracted: 'النص المستخرج جاهز للإرسال'
             }
         };
 
@@ -347,17 +384,241 @@
         const newCategory = document.getElementById('newCategory');
         const submitResponse = document.getElementById('submitResponse');
         const uiLang = document.getElementById('ui_lang');
+        const micStatus = document.getElementById('micStatus');
         let recognition;
+        let isRecognizing = false;
 
         let conversations = JSON.parse(localStorage.getItem('conversations')) || [];
 
-        function escapeHTML(str) {
-            return str.replace(/[&<>"']/g, match => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-            }[match]));
-        }
+        
+function escapeHTML(str) {
+    // Gérer les cas où str est undefined, null, ou non une chaîne
+    if (typeof str !== 'string' || str == null) {
+        return '';
+    }
+    return str.replace(/[&<>"']/g, match => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[match]));
+}
 
-        function isValidURL(str) {
+
+function getTranslation(key, lang, fallback = key) {
+    const validLang = translations[lang] ? lang : 'fr';
+    return translations[validLang][key] || translations['fr'][key] || fallback;
+}
+
+document.getElementById('image_file').addEventListener('change', async (e) => {
+    const label = document.getElementById('imageLabel');
+    const clearBtn = document.getElementById('clearImage');
+    const imageFile = e.target.files[0];
+
+    if (imageFile) {
+        label.textContent = `${getTranslation('imageLabel', uiLang.value).split(':')[0]} : ${imageFile.name}`;
+        clearBtn.classList.remove('hidden');
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            img.className = 'mt-2 max-w-full rounded-lg';
+            img.style.maxHeight = '100px';
+            chatbox.appendChild(img);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        };
+        reader.readAsDataURL(imageFile);
+
+        try {
+            const formData = new FormData();
+            formData.append('image_file', imageFile);
+            formData.append('output_lang', 'fr');
+            formData.append('csrf_token', document.getElementById('csrf_token').value);
+
+            addMessage(`${getTranslation('uploading', uiLang.value)}...`, false);
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.getElementById('csrf_token').value
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.extracted_text || errorData.error || getTranslation('networkError', uiLang.value));
+            }
+
+            const data = await response.json();
+            console.log('Réponse /chat pour image:', data);
+            if (data.error) {
+                addMessage(`${getTranslation('error', uiLang.value)} : ${data.extracted_text || data.error}`, false);
+                return;
+            }
+
+            const extractedText = data.extracted_text || '';
+            if (extractedText && !["Aucun texte détecté dans l'image.", "Erreur lors de l'extraction du texte.", "Image non valide pour l'extraction de texte (faible contraste ou contenu)."].includes(extractedText)) {
+                userInput.value = extractedText.trim();
+                toggleCancelButton();
+                addMessage(`${getTranslation('textExtracted', uiLang.value, 'Texte extrait prêt à envoyer')}`, false);
+            } else {
+                addMessage(`${getTranslation('error', uiLang.value)} : ${extractedText || getTranslation('noTextExtracted', uiLang.value)}`, false);
+                return;
+            }
+
+        } catch (error) {
+            addMessage(`${getTranslation('error', uiLang.value)} : ${error.message}`, false);
+            console.error('Erreur lors de l\'upload d\'image:', error);
+        }
+    } else {
+        label.textContent = getTranslation('imageLabel', uiLang.value);
+        clearBtn.classList.add('hidden');
+        userInput.value = '';
+        toggleCancelButton();
+    }
+});
+
+document.getElementById('clearImage').addEventListener('click', () => {
+    document.getElementById('image_file').value = '';
+    document.getElementById('imageLabel').textContent = getTranslation('imageLabel', uiLang.value);
+    document.getElementById('clearImage').classList.add('hidden');
+    userInput.value = '';
+    toggleCancelButton();
+});
+
+chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    stopRecognition();
+
+    const formData = new FormData(chatForm);
+    const message = userInput.value.trim();
+    const pdfFile = formData.get('pdf_file');
+    const imageFile = formData.get('image_file');
+
+    if (!message && !pdfFile.name && !imageFile.name) {
+        addMessage(errorMessages['Aucune question ou fichier fourni'][uiLang.value] || getTranslation('noQuestionOrFile', uiLang.value), false);
+        return;
+    }
+
+    if (pdfFile.name && (pdfFile.size > 5 * 1024 * 1024 || !pdfFile.name.endsWith('.pdf'))) {
+        addMessage(errorMessages['Fichier PDF invalide'][uiLang.value] || getTranslation('invalidPDF', uiLang.value), false);
+        return;
+    }
+    if (imageFile.name && (imageFile.size > 5 * 1024 * 1024 || !['image/png', 'image/jpeg'].includes(imageFile.type))) {
+        addMessage(errorMessages['Fichier image invalide (PNG/JPEG requis)'][uiLang.value] || getTranslation('invalidImage', uiLang.value), false);
+        return;
+    }
+
+    console.log('Message envoyé:', message);
+    sendButton.disabled = true;
+    sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    if (message) {
+        addMessage(message, true);
+    }
+
+    try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/chat', true);
+        xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+                const percent = (event.loaded / event.total) * 100;
+                addMessage(`${getTranslation('uploading', uiLang.value)} : ${Math.round(percent)}%`, false);
+            }
+        };
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                const data = JSON.parse(xhr.responseText);
+                console.log('Réponse /chat pour message:', data);
+                if (data.error) {
+                    throw new Error(errorMessages[data.error]?.[uiLang.value] || data.error);
+                }
+                const conversation = {
+                    question: message || getTranslation('fileUploaded', uiLang.value),
+                    answer: data.answer || getTranslation('noMatch', uiLang.value),
+                    link: data.link || '',
+                    category: data.category || 'Général',
+                    response_id: data.response_id || '',
+                    rating: 'Non évalué'
+                };
+                conversations.push(conversation);
+                if (conversations.length > 100) conversations = conversations.slice(-100);
+                localStorage.setItem('conversations', JSON.stringify(conversations));
+                addMessage(data.answer, false, data);
+                updateHistory();
+                if (data.ask_for_response || data.confidence < 0.3) {
+                    responseForm.classList.remove('hidden');
+                    responseForm.dataset.question = message || getTranslation('fileUploaded', uiLang.value);
+                }
+                if (chatbox.querySelector('.chat-bubble-bot')?.textContent.includes('Chargement')) {
+                    chatbox.querySelector('.chat-bubble-bot').remove();
+                }
+            } else {
+                const errorData = JSON.parse(xhr.responseText);
+                throw new Error(errorMessages[errorData.error]?.[uiLang.value] || errorData.error || getTranslation('networkError', uiLang.value));
+            }
+        };
+        xhr.onerror = () => {
+            throw new Error(getTranslation('networkError', uiLang.value));
+        };
+        xhr.send(formData);
+    } catch (error) {
+        addMessage(`${getTranslation('error', uiLang.value)} : ${error.message}`, false);
+        console.error('Erreur chat:', error);
+    } finally {
+        sendButton.disabled = false;
+        sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        userInput.value = '';
+        toggleCancelButton();
+    }
+});
+
+function addMessage(content, isUser, data = {}) {
+    const div = document.createElement('div');
+    div.className = isUser ? 'chat-bubble-user' : 'chat-bubble-bot';
+    div.setAttribute('role', 'region');
+    div.setAttribute('aria-live', 'polite');
+    if (isUser) {
+        div.textContent = escapeHTML(content);
+    } else {
+        const contentDiv = document.createElement('div');
+        const displayAnswer = escapeHTML(content) || translations[uiLang.value].noMatch;
+        contentDiv.innerHTML = `<strong>Chatbot :</strong> ${displayAnswer}`;
+        if (data.extracted_text) {
+            contentDiv.innerHTML += `<br><strong>Contenu extrait :</strong> ${escapeHTML(data.extracted_text)}`;
+        }
+        if (data.link && isValidURL(data.link)) {
+            const link = document.createElement('a');
+            link.href = escapeHTML(data.link);
+            link.className = 'text-blue-500 underline';
+            link.target = '_blank';
+            link.textContent = translations[uiLang.value].link || 'Lien';
+            contentDiv.appendChild(document.createElement('br'));
+            contentDiv.appendChild(link);
+        }
+        if (data.audio) {
+            const audio = document.createElement('audio');
+            audio.controls = true;
+            audio.src = data.audio;
+            audio.onerror = () => addMessage("Erreur : Impossible de lire l'audio.", false);
+            contentDiv.appendChild(document.createElement('br'));
+            contentDiv.appendChild(audio);
+        }
+        if (data.response_id) {
+            const ratingDiv = document.createElement('div');
+            ratingDiv.className = 'mt-2';
+            ratingDiv.innerHTML = `
+                <button class="like-btn text-green-500 hover:text-green-700" data-id="${data.response_id}"><i class="fas fa-thumbs-up"></i></button>
+                <button class="dislike-btn text-red-500 hover:text-red-700" data-id="${data.response_id}"><i class="fas fa-thumbs-down"></i></button>
+            `;
+            contentDiv.appendChild(ratingDiv);
+        }
+        div.appendChild(contentDiv);
+    }
+    chatbox.appendChild(div);
+    chatbox.scrollTop = chatbox.scrollHeight;
+}
+
+        
+function isValidURL(str) {
             try {
                 new URL(str);
                 return true;
@@ -374,53 +635,7 @@
             };
         }
 
-        function addMessage(content, isUser, data = {}) {
-            const div = document.createElement('div');
-            div.className = isUser ? 'chat-bubble-user' : 'chat-bubble-bot';
-            div.setAttribute('role', 'region');
-            div.setAttribute('aria-live', 'polite');
-            if (isUser) {
-                div.textContent = escapeHTML(content);
-            } else {
-                const contentDiv = document.createElement('div');
-                // Check if confidence is low or answer indicates no match
-                const isNoMatch = data.confidence < 0.3 || data.answer === 'Aucune donnée disponible pour répondre.';
-                const displayAnswer = isNoMatch ? translations[uiLang.value].noMatch : escapeHTML(data.answer);
-                contentDiv.innerHTML = `<strong>Chatbot :</strong> ${displayAnswer}`;
-                if (data.extracted_text) {
-                    contentDiv.innerHTML += `<br><strong>Contenu extrait :</strong> ${escapeHTML(data.extracted_text)}`;
-                }
-                if (data.link && isValidURL(data.link) && !isNoMatch) {
-                    const link = document.createElement('a');
-                    link.href = escapeHTML(data.link);
-                    link.className = 'text-blue-500 underline';
-                    link.target = '_blank';
-                    link.textContent = translations[uiLang.value].link || 'Lien';
-                    contentDiv.appendChild(document.createElement('br'));
-                    contentDiv.appendChild(link);
-                }
-                if (data.audio && !isNoMatch) {
-                    const audio = document.createElement('audio');
-                    audio.controls = true;
-                    audio.src = data.audio;
-                    audio.onerror = () => addMessage("Erreur : Impossible de lire l'audio.", false);
-                    contentDiv.appendChild(document.createElement('br'));
-                    contentDiv.appendChild(audio);
-                }
-                if (!isNoMatch) {
-                    const ratingDiv = document.createElement('div');
-                    ratingDiv.className = 'mt-2';
-                    ratingDiv.innerHTML = `
-                        <button class="like-btn text-green-500 hover:text-green-700" data-id="${data.response_id}"><i class="fas fa-thumbs-up"></i></button>
-                        <button class="dislike-btn text-red-500 hover:text-red-700" data-id="${data.response_id}"><i class="fas fa-thumbs-down"></i></button>
-                    `;
-                    contentDiv.appendChild(ratingDiv);
-                }
-                div.appendChild(contentDiv);
-            }
-            chatbox.appendChild(div);
-            chatbox.scrollTop = chatbox.scrollHeight;
-        }
+
 
         function updateHistory(page = 1, perPage = 20) {
             const contentDiv = historyBox.querySelector('.history-content') || document.createElement('div');
@@ -462,108 +677,144 @@
             historyBox.scrollTop = historyBox.scrollHeight;
         }
 
-        function updateInterfaceLang(lang) {
-            const t = translations[lang];
-            document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
-            document.getElementById('title').textContent = t.title;
-            document.getElementById('historyLabel').textContent = t.historyLabel;
-            document.getElementById('clearHistoryLabel').textContent = t.clearHistoryLabel;
-            document.getElementById('pdfLabel').textContent = t.pdfLabel;
-            document.getElementById('imageLabel').textContent = t.imageLabel;
-            document.getElementById('outputLangLabel').textContent = t.outputLangLabel;
-            document.getElementById('voiceLabel').textContent = t.voiceLabel;
-            document.getElementById('exportLabel').textContent = t.exportLabel;
-            document.getElementById('responsePrompt').textContent = t.responsePrompt;
-            userInput.placeholder = t.placeholder;
-            newResponse.placeholder = t.newResponse;
-            newLink.placeholder = t.newLink;
-            submitResponse.textContent = t.submit;
-            updateHistory();
+function updateInterfaceLang(lang) {
+    const t = translations[lang];
+    document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    const elements = {
+        title: document.getElementById('title'),
+        historyLabel: document.getElementById('historyLabel'),
+        clearHistoryLabel: document.getElementById('clearHistoryLabel'),
+        pdfLabel: document.getElementById('pdfLabel'),
+        imageLabel: document.getElementById('imageLabel'),
+        outputLangLabel: document.getElementById('outputLangLabel'),
+        voiceLabel: document.getElementById('voiceLabel'),
+        exportLabel: document.getElementById('exportLabel'),
+        responsePrompt: document.getElementById('responsePrompt'),
+        userInput: document.getElementById('userInput'),
+        newResponse: document.getElementById('newResponse'),
+        newLink: document.getElementById('newLink'),
+        submitResponse: document.getElementById('submitResponse')
+    };
+    if (elements.title) elements.title.textContent = t.title;
+    if (elements.historyLabel) elements.historyLabel.textContent = t.historyLabel;
+    if (elements.clearHistoryLabel) elements.clearHistoryLabel.textContent = t.clearHistoryLabel;
+    if (elements.pdfLabel) elements.pdfLabel.textContent = t.pdfLabel;
+    if (elements.imageLabel) elements.imageLabel.textContent = t.imageLabel;
+    if (elements.outputLangLabel) elements.outputLangLabel.textContent = t.outputLangLabel;
+    if (elements.voiceLabel) elements.voiceLabel.textContent = t.voiceLabel;
+    if (elements.exportLabel) elements.exportLabel.textContent = t.exportLabel;
+    if (elements.responsePrompt) elements.responsePrompt.textContent = t.responsePrompt;
+    if (elements.userInput) elements.userInput.placeholder = t.placeholder;
+    if (elements.newResponse) elements.newResponse.placeholder = t.newResponse;
+    if (elements.newLink) elements.newLink.placeholder = t.newLink;
+    if (elements.submitResponse) elements.submitResponse.textContent = t.submit;
+    updateHistory();
         }
 
-        uiLang.addEventListener('change', () => {
-            updateInterfaceLang(uiLang.value);
-        });
+        // Speech Recognition
+// Speech Recognition
 
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(chatForm);
-            const message = userInput.value.trim();
-            const pdfFile = formData.get('pdf_file');
-            const imageFile = formData.get('image_file');
+        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
 
-            if (!message && !pdfFile.name && !imageFile.name) {
-                addMessage(errorMessages['Aucune question ou fichier fourni'][uiLang.value], false);
-                return;
-            }
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
 
-            if (pdfFile.name && (pdfFile.size > 5 * 1024 * 1024 || !pdfFile.name.endsWith('.pdf'))) {
-                addMessage(errorMessages['Fichier PDF invalide'][uiLang.value], false);
-                return;
-            }
-            if (imageFile.name && (imageFile.size > 5 * 1024 * 1024 || !['image/png', 'image/jpeg'].includes(imageFile.type))) {
-                addMessage(errorMessages['Fichier image invalide (PNG/JPEG requis)'][uiLang.value], false);
-                return;
-            }
-
-            sendButton.disabled = true;
-            sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            if (message) addMessage(message, true);
-
-            try {
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', '/chat', true);
-                xhr.upload.onprogress = (event) => {
-                    if (event.lengthComputable) {
-                        const percent = (event.loaded / event.total) * 100;
-                        addMessage(`${translations[uiLang.value].uploading || 'Téléversement'} : ${Math.round(percent)}%`, false);
-                    }
-                };
-                xhr.onload = () => {
-                    if (xhr.status === 200) {
-                        const data = JSON.parse(xhr.responseText);
-                        if (data.error) {
-                            throw new Error(errorMessages[data.error]?.[uiLang.value] || data.error);
-                        }
-                        const conversation = {
-                            question: message || (translations[uiLang.value].fileUploaded || "Fichier uploadé"),
-                            answer: data.confidence < 0.3 ? translations[uiLang.value].noMatch : data.answer,
-                            link: data.link,
-                            category: data.category,
-                            response_id: data.response_id,
-                            rating: 'Non évalué'
-                        };
-                        conversations.push(conversation);
-                        if (conversations.length > 100) conversations = conversations.slice(-100);
-                        localStorage.setItem('conversations', JSON.stringify(conversations));
-                        addMessage(data.answer, false, data);
-                        updateHistory();
-                        if (data.ask_for_response || data.confidence < 0.3) {
-                            responseForm.classList.remove('hidden');
-                            responseForm.dataset.question = message || (translations[uiLang.value].fileUploaded || "Fichier uploadé");
-                        }
-                        if (chatbox.querySelector('.chat-bubble-bot')?.textContent.includes('Chargement')) {
-                            chatbox.querySelector('.chat-bubble-bot').remove();
-                        }
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
                     } else {
-                        const errorData = JSON.parse(xhr.responseText);
-                        throw new Error(errorMessages[errorData.error]?.[uiLang.value] || errorData.error || 'Erreur réseau ou serveur');
+                        interimTranscript += transcript;
                     }
-                };
-                xhr.onerror = () => {
-                    throw new Error(translations[uiLang.value].networkError || 'Erreur réseau');
-                };
-                xhr.send(formData);
+                }
+                userInput.value = finalTranscript + interimTranscript;
+                userInput.focus();
+                userInput.selectionStart = userInput.selectionEnd = userInput.value.length;
+                toggleCancelButton();
+            };
+
+
+
+            recognition.onerror = (event) => {
+                addMessage(`${translations[uiLang.value].error}: ${translations[uiLang.value].speechError} (${event.error})`, false);
+                stopRecognition();
+            };
+
+    recognition.onend = () => {
+        if (isRecognizing) {
+            try {
+                recognition.start();
             } catch (error) {
-                addMessage(`${translations[uiLang.value].error || 'Erreur'} : ${error.message}`, false);
-                console.error('Erreur chat:', error);
-            } finally {
-                sendButton.disabled = false;
-                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
-                userInput.value = '';
+                addMessage(`${translations[uiLang.value].error}: ${error.message}`, false);
+                stopRecognition();
             }
+        } else {
+            recordButton.classList.remove('recording', 'bg-red-500', 'animate-pulse');
+            recordButton.classList.add('bg-green-500', 'hover:bg-green-600');
+            micStatus.classList.add('hidden');
+        }
+    };
+        // Nouvelle fonction de gestion de l'enregistrement
+        
+}
+function toggleRecording() {
+            if (!isRecognizing) {
+                startRecognition();
+            } else {
+                stopRecognition();
+            }
+        }
+
+
+
+        function startRecognition() {
+            if (!recognition) return;
+            recognition.lang = uiLang.value === 'ar' ? 'ar-SA' : uiLang.value === 'en' ? 'en-US' : 'fr-FR';
+            try {
+                userInput.value = '';
+                recognition.start();
+                isRecognizing = true;
+                recordButton.classList.add('bg-red-500', 'hover:bg-red-600', 'animate-pulse');
+                recordButton.classList.remove('bg-green-500');
+                micStatus.classList.remove('hidden');
+                micStatus.textContent = translations[uiLang.value].recording;
+            } catch (error) {
+                addMessage(`${translations[uiLang.value].error} : ${error.message}`, false);
+            }
+        }
+
+        function stopRecognition() {
+            if (!recognition) return;
+            recognition.stop();
+            isRecognizing = false;
+            recordButton.classList.remove('bg-red-500', 'hover:bg-red-600', 'animate-pulse');
+            recordButton.classList.add('bg-green-500');
+            micStatus.classList.add('hidden');
+        }
+
+        // Gestionnaire d'événement pour le bouton d'enregistrement
+        recordButton.addEventListener('click', toggleRecording);
+
+        // Gestionnaire pour le bouton d'annulation
+        document.getElementById('cancelInput').addEventListener('click', () => {
+            userInput.value = '';
+            toggleCancelButton();
         });
 
+        function toggleCancelButton() {
+            document.getElementById('cancelInput').classList.toggle('hidden', !userInput.value);
+        }
+
+        userInput.addEventListener('input', toggleCancelButton);
+
+    
+        
         submitResponse.addEventListener('click', async () => {
             const question = responseForm.dataset.question;
             const response = newResponse.value.trim();
@@ -698,33 +949,7 @@
             }
         }, 200));
 
-        recordButton.addEventListener('click', () => {
-            if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
-                addMessage(`${translations[uiLang.value].error || 'Erreur'} : ${translations[uiLang.value].speechNotSupported || 'La reconnaissance vocale n\'est pas supportée par ce navigateur.'}`, false);
-                return;
-            }
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (recordButton.classList.contains('recording')) {
-                recognition.stop();
-                recordButton.classList.remove('recording', 'bg-red-500');
-                return;
-            }
-            recognition = new SpeechRecognition();
-            recognition.lang = uiLang.value === 'ar' ? 'ar-SA' : uiLang.value === 'en' ? 'en-US' : 'fr-FR';
-            recognition.onresult = (event) => {
-                userInput.value = event.results[0][0].transcript;
-                chatForm.dispatchEvent(new Event('submit'));
-            };
-            recognition.onerror = (event) => {
-                addMessage(`${translations[uiLang.value].error || 'Erreur'} : ${translations[uiLang.value].speechError || 'Échec de la reconnaissance vocale.'} (${event.error})`, false);
-            };
-            recognition.onend = () => {
-                recordButton.classList.remove('recording', 'bg-red-500');
-            };
-            recognition.start();
-            recordButton.classList.add('recording', 'bg-red-500');
-        });
-
+        
         document.getElementById('pdf_file').addEventListener('change', (e) => {
             const label = document.getElementById('pdfLabel');
             const clearBtn = document.getElementById('clearPdf');
@@ -743,33 +968,7 @@
             document.getElementById('clearPdf').classList.add('hidden');
         });
 
-        document.getElementById('image_file').addEventListener('change', (e) => {
-            const label = document.getElementById('imageLabel');
-            const clearBtn = document.getElementById('clearImage');
-            if (e.target.files[0]) {
-                label.textContent = `${translations[uiLang.value].imageLabel.split(':')[0]} : ${e.target.files[0].name}`;
-                clearBtn.classList.remove('hidden');
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const img = document.createElement('img');
-                    img.src = event.target.result;
-                    img.className = 'mt-2 max-w-full rounded-lg';
-                    img.style.maxHeight = '100px';
-                    chatbox.appendChild(img);
-                    chatbox.scrollTop = chatbox.scrollHeight;
-                };
-                reader.readAsDataURL(e.target.files[0]);
-            } else {
-                label.textContent = translations[uiLang.value].imageLabel;
-                clearBtn.classList.add('hidden');
-            }
-        });
 
-        document.getElementById('clearImage').addEventListener('click', () => {
-            document.getElementById('image_file').value = '';
-            document.getElementById('imageLabel').textContent = translations[uiLang.value].imageLabel;
-            document.getElementById('clearImage').classList.add('hidden');
-        });
 
         document.getElementById('clearHistoryButton').addEventListener('click', () => {
             conversations = [];

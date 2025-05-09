@@ -1,25 +1,31 @@
-from sklearn.feature_extraction.text import TfidfVectorizer
-import nltk
-import string
 import re
-import bleach
+from sklearn.feature_extraction.text import TfidfVectorizer
 from . import french_stopwords, stemmer
 
-def preprocess_text(text):
-    """Preprocess text for search: clean, tokenize, stem."""
-    if not isinstance(text, str):
-        text = str(text)
-    text = bleach.clean(text)
+def preprocess_text(text, lang='fr'):
+    """Preprocess text by cleaning, stemming, and removing stopwords."""
+    # Convert to lowercase
     text = text.lower()
-    text = re.sub(r'\d+', '', text)
-    text = text.translate(str.maketrans('', '', string.punctuation))
-    tokens = nltk.word_tokenize(text, language='french')
-    tokens = [stemmer.stem(word) for word in tokens if word not in french_stopwords]
-    return ' '.join(tokens)
+    # Remove punctuation
+    text = re.sub(r'[^\w\s]', '', text)
+    
+    # Tokenize and remove stopwords
+    words = text.split()
+    if lang == 'fr':
+        words = [stemmer.stem(word) for word in words if word not in french_stopwords]
+    else:
+        words = [word for word in words if len(word) > 2]  # Basic filtering for English
+    
+    return ' '.join(words)
 
-def initialize_vectorizer(df):
-    """Initialize vectorizer and transform questions."""
-    df['Processed_Question'] = df['Question'].apply(preprocess_text)
-    vectorizer = TfidfVectorizer()
+def initialize_vectorizer(df, lang='fr'):
+    """Initialize TF-IDF vectorizer and transform questions."""
+    df['Processed_Question'] = df['Question'].apply(lambda x: preprocess_text(x, lang))
+    
+    # Initialize TF-IDF vectorizer
+    stop_words = french_stopwords if lang == 'fr' else 'english'
+    vectorizer = TfidfVectorizer(max_features=1000, stop_words=stop_words)
+    
+    # Transform processed questions
     X = vectorizer.fit_transform(df['Processed_Question'])
     return vectorizer, X

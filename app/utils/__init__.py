@@ -1,7 +1,8 @@
 import nltk
-import logging
 from nltk.corpus import stopwords
 from nltk.stem.snowball import FrenchStemmer
+from .logging import initialize_logging
+from .models import KNNModel, SVMModel, CosineModel
 
 # Initialize shared resources
 french_stopwords = stopwords.words('french')
@@ -13,8 +14,3 @@ def initialize_nltk():
         nltk.data.find('corpora/stopwords')
     except LookupError:
         nltk.download('stopwords')
-
-def initialize_logging():
-    """Configure logging."""
-    logging.basicConfig(level=logging.DEBUG)
-    return logging.getLogger(__name__)

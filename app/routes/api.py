@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify, send_file, current_app
 from werkzeug.utils import secure_filename
 import os
-from app.utils import initialize_logging
-from app.utils.data_manager import get_best_response, add_response, rate_response, get_df_lock, initialize_data
+from app.utils.logging import initialize_logging
+from app.utils.data_manager import get_best_response, add_response, rate_response, get_df_lock, initialize_data, evaluate_model
 from app.utils.pdf_generator import export_conversations
 
 logger = initialize_logging()
@@ -61,7 +61,8 @@ def chat_handler():
         if not question and not (pdf or image):
             return jsonify({'error': 'Aucune question ou fichier fourni'}), 400
 
-        response = get_best_response(question or "Fichier uploadé")
+        # Use KNN for response selection
+        response = get_best_response(question or "Fichier uploadé", method='knn')
         response['ask_for_response'] = response['confidence'] < 0.3
 
         # Clean up uploaded files
@@ -101,3 +102,9 @@ def export_conversations_route():
         buffer, mimetype, filename = result
         return send_file(buffer, mimetype=mimetype, download_name=filename)
     return jsonify(result), result.get('status', 500)
+
+@api.route('/evaluate', methods=['GET'])
+def evaluate_route():
+    """Evaluate the model's performance."""
+    result = evaluate_model()
+    return jsonify(result)

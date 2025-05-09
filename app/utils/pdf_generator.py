@@ -5,12 +5,29 @@ from reportlab.pdfbase.ttfonts import TTFont
 from io import BytesIO
 import os
 import bleach
-from . import initialize_logging
+from .logging import initialize_logging
+from sklearn.feature_extraction.text import TfidfVectorizer
+from collections import Counter
 
 logger = initialize_logging()
 
+def generate_summary(conversations):
+    """Generate a summary of conversation topics using keyword extraction."""
+    if not conversations:
+        return "No conversations to summarize."
+    
+    # Extract keywords using TF-IDF
+    texts = [conv['question'] + ' ' + conv['answer'] for conv in conversations if isinstance(conv, dict)]
+    vectorizer = TfidfVectorizer(max_features=5)
+    X = vectorizer.fit_transform(texts)
+    feature_names = vectorizer.get_feature_names_out()
+    
+    # Get top keywords
+    keywords = feature_names.tolist()
+    return f"Summary of topics discussed: {', '.join(keywords)}"
+
 def export_conversations(data):
-    """Export conversations to PDF."""
+    """Export conversations to PDF with a summary."""
     try:
         if not data or 'conversations' not in data or not isinstance(data['conversations'], list):
             return {'error': 'Invalid or missing conversation data'}, 400
@@ -29,6 +46,13 @@ def export_conversations(data):
             p.setFont('Helvetica', 12)
 
         y = 750
+        # Add summary
+        summary = generate_summary(valid_conversations)
+        p.drawString(50, y, "Conversation Summary:")
+        p.drawString(50, y-20, summary[:100])
+        y -= 40
+        
+        # Add conversations
         for conv in valid_conversations:
             question = bleach.clean(str(conv['question']))[:100]
             answer = bleach.clean(str(conv['answer']))[:100]

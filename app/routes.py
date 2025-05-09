@@ -8,32 +8,38 @@ from .utils.history import save_conversation
 from .models.naive_bayes import NaiveBayesModel
 import uuid
 import logging
+from .image_processing import process_image
 
 bp = Blueprint('routes', __name__)
 logger = logging.getLogger(__name__)
 
 @bp.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('chat.html')
 
 @bp.route('/chat', methods=['POST'])
 def chat():
     try:
         pdf = request.files.get('pdf_file')
         image = request.files.get('image_file')
-        question = request.form.get('message', '')
+        question = request.form.get('message', '').strip()
         output_lang = request.form.get('output_lang', 'fr')
-        
+        extracted_text = ''
+
+        supported_langs = ['fr']
+        if output_lang not in supported_langs:
+            return jsonify({'error': f"Langue non supportée: {output_lang}. Langues supportées: {supported_langs}", 'extracted_text': extracted_text}), 400
+
         if not question and not (pdf or image):
-            return jsonify({'error': 'Aucune question ou fichier fourni'}), 400
+            return jsonify({'error': 'Aucune question ou fichier fourni', 'extracted_text': extracted_text}), 400
         
         uploaded_files = []
         if pdf and pdf.filename:
             if not pdf.filename.endswith('.pdf') or pdf.content_type != 'application/pdf':
-                return jsonify({'error': 'Fichier PDF invalide'}), 400
+                return jsonify({'error': 'Fichier PDF invalide', 'extracted_text': extracted_text}), 400
             pdf.seek(0, os.SEEK_END)
             if pdf.tell() > current_app.config['MAX_CONTENT_LENGTH']:
-                return jsonify({'error': 'Fichier PDF trop volumineux (max 5 Mo)'}), 400
+                return jsonify({'error': 'Fichier PDF trop volumineux (max 5 Mo)', 'extracted_text': extracted_text}), 400
             pdf.seek(0)
             filename = secure_filename(pdf.filename)
             pdf_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
@@ -42,34 +48,47 @@ def chat():
         
         if image and image.filename:
             if image.content_type not in ['image/png', 'image/jpeg']:
-                return jsonify({'error': 'Fichier image invalide (PNG/JPEG requis)'}), 400
+                return jsonify({'error': 'Fichier image invalide (PNG/JPEG requis)', 'extracted_text': extracted_text}), 400
             image.seek(0, os.SEEK_END)
             if image.tell() > current_app.config['MAX_CONTENT_LENGTH']:
-                return jsonify({'error': 'Fichier image trop volumineux (max 5 Mo)'}), 400
+                return jsonify({'error': 'Fichier image trop volumineux (max 5 Mo)', 'extracted_text': extracted_text}), 400
             image.seek(0)
-            filename = secure_filename(pdf.filename)
+            filename = secure_filename(image.filename)
             image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             image.save(image_path)
             uploaded_files.append(image_path)
-        
-        # Use Naive Bayes model for response
+            
+            extracted_text = process_image(image_path)
+            logger.debug(f"Texte extrait de l'image : '{extracted_text}'")
+            if extracted_text in ["Aucun texte détecté dans l'image.", "Erreur lors de l'extraction du texte.", "Fichier image introuvable.", "Image trop petite pour l'extraction de texte.", "Image non valide pour l'extraction de texte (faible contraste ou contenu)."]:
+                return jsonify({'error': extracted_text, 'extracted_text': extracted_text}), 400
+
+        if not question and extracted_text:
+            question = extracted_text
+        elif not question:
+            return jsonify({'error': 'Aucun texte extrait ou question fournie', 'extracted_text': extracted_text}), 400
+
+        logger.debug(f"Question envoyée au modèle: '{question}'")
         model = NaiveBayesModel(current_app.config['DATAFRAME'], current_app.config['VECTORIZER'], current_app.config['TFIDF_MATRIX'])
-        response = model.get_response(question or "Fichier uploadé")
+        response = model.get_response(question)
         
-        # Save conversation
+        response['extracted_text'] = extracted_text
+        logger.debug(f"Réponse JSON envoyée : {response}")
+        
         save_conversation(question, response['answer'], response['link'], response['category'], response['response_id'])
         
-        # Clean up files
         for file_path in uploaded_files:
             try:
                 os.remove(file_path)
             except Exception as e:
-                logger.error(f"Error deleting file {file_path}: {e}")
+                logger.error(f"Erreur lors de la suppression du fichier {file_path}: {e}")
         
         return jsonify(response)
+    
     except Exception as e:
-        logger.error(f"Error in /chat: {e}", exc_info=True)
-        return jsonify({'error': 'Une erreur interne est survenue'}), 500
+        logger.error(f"Erreur dans /chat: {e}", exc_info=True)
+        return jsonify({'error': 'Une erreur interne est survenue', 'extracted_text': extracted_text}), 500
+
 
 @bp.route('/add_response', methods=['POST'])
 def add_response():
@@ -101,9 +120,10 @@ def add_response():
         df = pd.concat([current_app.config['DATAFRAME'], pd.DataFrame([new_row])], ignore_index=True)
         current_app.config['DATAFRAME'] = df
         current_app.config['TFIDF_MATRIX'] = current_app.config['VECTORIZER'].fit_transform(df['Processed_Question'])
-        df.to_csv('iset_questions_reponses.csv', index=False, encoding='utf-8')
+        df.to_csv(os.path.join(current_app.config['DATA_FOLDER'], 'iset_questions_reponses.csv'), index=False, encoding='utf-8')        
         
         return jsonify({'success': True})
+    
     except Exception as e:
         logger.error(f"Error in /add_response: {e}", exc_info=True)
         return jsonify({'error': 'Une erreur interne est survenue'}), 500
@@ -116,7 +136,7 @@ def rate():
             return jsonify({'error': 'Données manquantes'}), 400
         
         # Save rating to ratings.csv
-        ratings_file = 'ratings.csv'
+        ratings_file = os.path.join(current_app.config['DATA_FOLDER'], 'ratings.csv')
         rating_data = pd.DataFrame([{
             'response_id': data['response_id'],
             'rating': data['rating'],
@@ -140,7 +160,13 @@ def export_conversations():
             return jsonify({'error': 'Données manquantes'}), 400
         
         pdf_buffer = generate_pdf(data['conversations'])
-        return send_file(pdf_buffer, mimetype='application/pdf', download_name='conversation.pdf')
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            download_name='conversation.pdf',
+            as_attachment=True
+        )
+    
     except Exception as e:
         logger.error(f"Error in /export_conversations: {e}", exc_info=True)
         return jsonify({'error': 'Une erreur interne est survenue'}), 500
