@@ -2,7 +2,7 @@ pandas==2.2.1
 numpy==1.26.4
 nltk==3.8.1
 PyPDF2==3.0.1
-pytesseract==0.3.10
+easyocr==1.7.1
 Pillow==10.3.0
 SpeechRecognition==3.10.1
 gTTS==2.5.1

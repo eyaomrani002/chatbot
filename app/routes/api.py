@@ -4,6 +4,7 @@ import os
 from app.utils.logging import initialize_logging
 from app.utils.data_manager import get_best_response, add_response, rate_response, get_df_lock, initialize_data, evaluate_model
 from app.utils.pdf_generator import export_conversations
+from app.utils.image_processing import extract_text
 
 logger = initialize_logging()
 api = Blueprint('api', __name__)
@@ -27,6 +28,7 @@ def chat_handler():
         pdf = request.files.get('pdf_file')
         image = request.files.get('image_file')
         uploaded_files = []
+        extracted_text = ""
 
         # Validate and save PDF
         if pdf and pdf.filename:
@@ -55,15 +57,35 @@ def chat_handler():
             image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             image.save(image_path)
             uploaded_files.append(image_path)
+            
+            # Extract text from image
+            try:
+                extracted_text = extract_text(image_path)
+                logger.info(f"Texte extrait de l'image: {extracted_text[:100]}...")
+            except Exception as e:
+                logger.error(f"Erreur lors de l'extraction du texte de l'image: {e}", exc_info=True)
+                extracted_text = "Erreur lors de l'extraction du texte de l'image."
 
         question = request.form.get('message', '')
         logger.debug(f"Received question: {question}")
+        
+        # Combine question with extracted text if available
+        if extracted_text and not extracted_text.startswith("Erreur"):
+            if question:
+                question = f"{question} [Texte extrait de l'image: {extracted_text}]"
+            else:
+                question = f"Texte extrait de l'image: {extracted_text}"
+        
         if not question and not (pdf or image):
             return jsonify({'error': 'Aucune question ou fichier fourni'}), 400
 
         # Use KNN for response selection
         response = get_best_response(question or "Fichier uploadé", method='knn')
         response['ask_for_response'] = response['confidence'] < 0.3
+        
+        # Add extracted text to response if available
+        if extracted_text and not extracted_text.startswith("Erreur"):
+            response['extracted_text'] = extracted_text
 
         # Clean up uploaded files
         for file_path in uploaded_files:
