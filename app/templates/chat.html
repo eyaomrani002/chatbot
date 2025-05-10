@@ -103,7 +103,33 @@
             color: #e5e7eb;
             font-size: 0.9rem;
         }
+/* Updated styles for like/dislike buttons */
+        .like-btn, .dislike-btn {
+            transition: color 0.3s ease, background-color 0.3s ease, opacity 0.3s ease;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
 
+        .like-btn.active {
+            color: white !important;
+            background-color: #22c55e !important; /* Green when active */
+        }
+
+        .dislike-btn.active {
+            color: white !important;
+            background-color: #ef4444 !important; /* Red when active */
+        }
+
+        .like-btn.inactive, .dislike-btn.inactive {
+            color: #9ca3af !important; /* Grey when inactive */
+            background-color: transparent !important;
+            opacity: 0.5;
+        }
+
+        .like-btn:hover:not(.active):not(.inactive), .dislike-btn:hover:not(.active):not(.inactive) {
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-b from-gray-900 to-indigo-900 flex flex-col min-h-screen">
@@ -744,14 +770,20 @@ function addMessage(content, isUser, data = {}) {
             contentDiv.appendChild(audio);
         }
         if (data.response_id) {
-            const ratingDiv = document.createElement('div');
-            ratingDiv.className = 'mt-2';
-            ratingDiv.innerHTML = `
-                <button class="like-btn text-green-500 hover:text-green-700" data-id="${data.response_id}"><i class="fas fa-thumbs-up"></i></button>
-                <button class="dislike-btn text-red-500 hover:text-red-700" data-id="${data.response_id}"><i class="fas fa-thumbs-down"></i></button>
-            `;
-            contentDiv.appendChild(ratingDiv);
-        }
+                    const ratingDiv = document.createElement('div');
+                    ratingDiv.className = 'mt-2';
+                    const isLiked = data.rating === 'like';
+                    const isDisliked = data.rating === 'dislike';
+                    ratingDiv.innerHTML = `
+                        <button class="like-btn ${isLiked ? 'active' : isDisliked ? 'inactive' : 'text-green-500'} hover:text-green-700" data-id="${data.response_id}" ${isLiked || isDisliked ? 'disabled' : ''}>
+                            <i class="fas fa-thumbs-up"></i>
+                        </button>
+                        <button class="dislike-btn ${isDisliked ? 'active' : isLiked ? 'inactive' : 'text-red-500'} hover:text-red-700" data-id="${data.response_id}" ${isLiked || isDisliked ? 'disabled' : ''}>
+                            <i class="fas fa-thumbs-down"></i>
+                        </button>
+                    `;
+                    contentDiv.appendChild(ratingDiv);
+                }
         div.appendChild(contentDiv);
     }
     chatbox.appendChild(div);
@@ -955,47 +987,61 @@ function toggleRecording() {
 
     
         
-        submitResponse.addEventListener('click', async () => {
-            const question = responseForm.dataset.question;
-            const response = newResponse.value.trim();
-            const link = newLink.value.trim();
-            const category = newCategory.value;
-            if (!response) {
-                addMessage(`${translations[uiLang.value].error || 'Erreur'} : ${translations[uiLang.value].noResponse || 'Veuillez entrer une réponse.'}`, false);
-                return;
-            }
+        chatbox.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('like-btn') || e.target.classList.contains('dislike-btn') || e.target.parentElement.classList.contains('like-btn') || e.target.parentElement.classList.contains('dislike-btn')) {
+                const button = e.target.classList.contains('like-btn') || e.target.classList.contains('dislike-btn') ? e.target : e.target.parentElement;
+                const responseId = button.dataset.id;
+                const rating = button.classList.contains('like-btn') ? 'like' : 'dislike';
 
-            try {
-                const res = await fetch('/add_response', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'X-CSRFToken': document.getElementById('csrf_token').value 
-                    },
-                    body: JSON.stringify({ question, response, link, category })
-                });
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    throw new Error(errorMessages[errorData.error]?.[uiLang.value] || errorData.error || 'Erreur lors de l’ajout de la réponse');
+                try {
+                    const res = await fetch('/rate', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json', 
+                            'X-CSRFToken': document.getElementById('csrf_token').value 
+                        },
+                        body: JSON.stringify({ response_id: responseId, rating })
+                    });
+                    if (!res.ok) {
+                        const errorData = await res.json();
+                        throw new Error(errorMessages[errorData.error]?.[uiLang.value] || errorData.error || 'Erreur lors de l’enregistrement de l’évaluation');
+                    }
+                    const data = await res.json();
+                    if (data.error) throw new Error(errorMessages[data.error]?.[uiLang.value] || data.error);
+
+                    // Update button states
+                    const parent = button.parentElement;
+                    const likeBtn = parent.querySelector('.like-btn');
+                    const dislikeBtn = parent.querySelector('.dislike-btn');
+                    if (rating === 'like') {
+                        likeBtn.classList.add('active');
+                        likeBtn.classList.remove('inactive', 'text-green-500');
+                        dislikeBtn.classList.add('inactive');
+                        dislikeBtn.classList.remove('active', 'text-red-500');
+                    } else {
+                        dislikeBtn.classList.add('active');
+                        dislikeBtn.classList.remove('inactive', 'text-red-500');
+                        likeBtn.classList.add('inactive');
+                        likeBtn.classList.remove('active', 'text-green-500');
+                    }
+                    // Keep buttons enabled to allow changing the rating
+                    likeBtn.disabled = false;
+                    dislikeBtn.disabled = false;
+
+                    // Update conversation rating
+                    const index = conversations.findIndex(c => c.response_id === responseId);
+                    if (index !== -1) {
+                        conversations[index].rating = rating;
+                        localStorage.setItem('conversations', JSON.stringify(conversations));
+                        updateHistory();
+                    }
+                } catch (error) {
+                    addMessage(`${translations[uiLang.value].error || 'Erreur'} : ${error.message}`, false);
+                    console.error('Erreur rate:', error);
                 }
-                const data = await res.json();
-                if (data.error) throw new Error(errorMessages[data.error]?.[uiLang.value] || data.error);
-
-                responseForm.classList.add('hidden');
-                newResponse.value = '';
-                newLink.value = '';
-                newCategory.value = 'Général';
-                addMessage(translations[uiLang.value].responseAdded || "Merci ! Votre réponse a été ajoutée.", false);
-                conversations.push({ question, answer: response, link, category, rating: 'Non évalué' });
-                if (conversations.length > 100) conversations = conversations.slice(-100);
-                localStorage.setItem('conversations', JSON.stringify(conversations));
-                updateHistory();
-            } catch (error) {
-                addMessage(`${translations[uiLang.value].error || 'Erreur'} : ${error.message}`, false);
-                console.error('Erreur add_response:', error);
             }
         });
-
+        
         chatbox.addEventListener('click', async (e) => {
             if (e.target.classList.contains('like-btn') || e.target.classList.contains('dislike-btn')) {
                 const responseId = e.target.dataset.id;
