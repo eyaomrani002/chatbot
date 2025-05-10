@@ -19,3 +19,9 @@ werkzeug==3.0.2
 flask-wtf
 SQLAlchemy
 flask-sqlalchemy
+pdfplumber
+pdf2image
+pytesseract
+pillow
+bleach
+pymupdf
