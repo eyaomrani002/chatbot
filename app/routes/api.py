@@ -110,7 +110,7 @@ def chat_handler():
             'confidence': '',
             'intent': '',
             'suggestion': '',
-            'language': 'fr'
+            'language': ''
             }
             llm_response = llm_instance.ask_question_to_llm(question)
             response['answer'] = llm_response.message.content

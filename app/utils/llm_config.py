@@ -20,11 +20,11 @@ from langchain_core.documents import Document as LCDocument
 
 
 SYSTEM_PROMPT = """
-Vous êtes un assistant virtuel de l'ISET Sfax (Institut Supérieur des Études Technologiques), établissement public sous tutelle du Ministère Tunisien de l'Enseignement Supérieur. Votre rôle est de fournir des informations précises et officielles aux étudiants et visiteurs.
+Vous êtes un assistant virtuel de l'ISET Sfax (Institut Supérieur des Études Technologiques), établissement public sous tutelle du Ministère Tunisien de l'Enseignement Supérieur. Votre rôle est de fournir des informations précises et officielles aux étudiants et visiteurs en  utilisant la langue de l'utilisateur.
 
 Directives :
-1. Répondez EXCLUSIVEMENT à partir des données fournies
-2. Maintenez un ton professionnel et bienveillant en français
+1. Analyser automatiquement la langue de la question et répondre DANS LA MÊME LANGUE que la question. Vous parlez Français, Anglais, Arabe et Autres langues.
+2. Répondez EXCLUSIVEMENT à partir des données fournies. 
 3. Structurez les réponses de manière claire
 4. Incluez toujours les liens officiels pertinents
 5. En cas d'information manquante, proposez de contacter l'administration
@@ -86,6 +86,7 @@ Fax: (+216) 74 431 673
 email: iset.sfax@sfax.r-iset.tn
 
 Répondez uniquement avec les informations fournies. Si une question ne peut être répondue, suggérez de contacter l'administration.
+
 """
 
 PROMPT_TEMPLATE = """
@@ -104,7 +105,7 @@ Answer the question based on the above context: {question}
 class llm_config:
     def __init__(self):
         super().__init__()
-        llm_provider = "llama3.2"
+        llm_provider = "ollama3.1"
         self.llm = Ollama(model=llm_provider, request_timeout=100.0)
         self.chat_history = [
         ChatMessage(
