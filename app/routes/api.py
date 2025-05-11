@@ -3,15 +3,20 @@ from werkzeug.utils import secure_filename
 import os
 from app.utils.logging import initialize_logging
 from app.utils.data_manager import get_best_response, add_response, rate_response, get_df_lock, initialize_data, evaluate_model
+from  app.utils.llm_config import llm_config as llm
+
 from app.utils.pdf_generator import export_conversations
 from app.utils.image_processing import extract_text
 
 logger = initialize_logging()
 api = Blueprint('api', __name__)
 
-# Initialize data
+Use_llm = True
+
+# Initialize data and LLM
 try:
     initialize_data()
+    llm_instance = llm()
 except Exception as e:
     logger.error(f"Failed to initialize data at startup: {e}", exc_info=True)
     raise
@@ -68,34 +73,50 @@ def chat_handler():
 
         question = request.form.get('message', '')
         logger.debug(f"Received question: {question}")
-        
-        # Combine question with extracted text if available
-        if extracted_text and not extracted_text.startswith("Erreur"):
-            if question:
-                question = f"{question} [Texte extrait de l'image: {extracted_text}]"
-            else:
-                question = f"Texte extrait de l'image: {extracted_text}"
-        
-        if not question and not (pdf or image):
-            return jsonify({'error': 'Aucune question ou fichier fourni'}), 400
 
-        # Use KNN for response selection
-        response = get_best_response(question or "Fichier uploadé", method='knn')
-        response['ask_for_response'] = response['confidence'] < 0.3
-        
-        # Add extracted text to response if available
-        if extracted_text and not extracted_text.startswith("Erreur"):
-            response['extracted_text'] = extracted_text
+        if not Use_llm:
+            # Combine question with extracted text if available
+            if extracted_text and not extracted_text.startswith("Erreur"):
+                if question:
+                    question = f"{question} [Texte extrait de l'image: {extracted_text}]"
+                else:
+                    question = f"Texte extrait de l'image: {extracted_text}"
+            
+            if not question and not (pdf or image):
+                return jsonify({'error': 'Aucune question ou fichier fourni'}), 400
 
-        # Clean up uploaded files
-        for file_path in uploaded_files:
-            try:
-                os.remove(file_path)
-            except Exception as e:
-                logger.error(f"Erreur lors de la suppression du fichier {file_path}: {e}")
+            # Use KNN for response selection
+            
+            response = get_best_response(question or "Fichier uploadé", method='knn')
+            response['ask_for_response'] = response['confidence'] < 0.3
+            
+            # Add extracted text to response if available
+            if extracted_text and not extracted_text.startswith("Erreur"):
+                response['extracted_text'] = extracted_text
 
-        logger.debug(f"Sending response: {response}")
-        return jsonify(response)
+            # Clean up uploaded files
+            for file_path in uploaded_files:
+                try:
+                    os.remove(file_path)
+                except Exception as e:
+                    logger.error(f"Erreur lors de la suppression du fichier {file_path}: {e}")
+        else:            
+            # llm response
+            response = {
+            'answer': '',
+            'link':'',
+            'category': '',
+            'response_id': '',
+            'confidence': '',
+            'intent': '',
+            'suggestion': '',
+            'language': 'fr'
+            }
+            llm_response = llm_instance.ask_question_to_llm(question)
+            response['answer'] = llm_response.message.content
+
+            logger.debug(f"Sending response: {response}")
+            return jsonify(response)
     
     except RuntimeError as e:
         logger.error(f"Erreur dans /chat: {e}", exc_info=True)

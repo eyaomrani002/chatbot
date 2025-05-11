@@ -1057,7 +1057,7 @@
             const pdfFile = formData.get('pdf_file');
             const imageFile = formData.get('image_file');
 
-            if (!message && !pdfFile.name && !imageFile.name) {
+            if (!message && !pdfFile.name  && !imageFile.name) {
                 addMessage(errorMessages['Aucune question ou fichier fourni'][uiLang.value] || getTranslation('noQuestionOrFile', uiLang.value), false);
                 return;
             }
@@ -1084,7 +1084,7 @@
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', '/chat', true);
                 xhr.upload.onprogress = (event) => {
-                    if (event.lengthComputable) {
+                    if (event.lengthComputable && (pdfFile.name || imageFile.name)) {
                         const percent = (event.loaded / event.total) * 100;
                         addMessage(`${getTranslation('uploading', uiLang.value)} : ${Math.round(percent)}%`, false);
                     }
